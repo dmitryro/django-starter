@@ -1,23 +1,20 @@
 # start from an official image
-FROM python:3.7
+FROM python:3.7.4
 
 # arbitrary location choice: you can change the directory
-RUN mkdir -p /opt/services/djangoapp/src
-WORKDIR /opt/services/djangoapp/src
+RUN mkdir -p /opt/services/api/src
+WORKDIR /opt/services/api/src
 
 # install our dependencies
 # we use --system flag because we don't need an extra virtualenv
-COPY Pipfile Pipfile.lock /opt/services/djangoapp/src/
-RUN pip install pipenv && pipenv install --system
+COPY requirements.txt requirements.txt
+COPY entrypoint.sh /entrypoint.sh
+RUN pip install -r requirements.txt
 
 # copy our project code
-COPY . /opt/services/djangoapp/src
-RUN cd demo && python manage.py collectstatic --no-input -v 2
+COPY . /opt/services/api/src
+RUN cd api && python manage.py collectstatic --no-input -v 2
 
-RUN ls -la /opt/services/djangoapp/static/
-
-# expose the port 8000
+RUN ls -la /opt/services/api/static/
+RUN chmod +x /entrypoint.sh
 EXPOSE 80
-
-# define the default command to run when starting the container
-CMD ["gunicorn", "--chdir", "demo", "--bind", ":80", "demo.wsgi:application"]

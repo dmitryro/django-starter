@@ -1,0 +1,14 @@
+Django==2.2.4
+django-filter
+django-cors-headers
+django-oauth-toolkit
+djangorestframework==3.10.2
+django-rest-swagger==2.2.0
+djangorestframework-filters
+djangorestframework-oauth
+markdown
+psycopg2==2.8.3
+gunicorn==19.9.0
+oauthlib
+pyyaml
+django-gunicorn==0.1.1

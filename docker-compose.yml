@@ -1,32 +1,56 @@
-version: '3'
+version: '3.1'
 
 services:
-  djangoapp:
-    build: .
+  db:
+    container_name: ${PROJECT_NAME}_postgres
+    image: postgres:latest
+    env_file:
+      - .env
+    restart: always
     volumes:
-      - .:/opt/services/djangoapp/src
-      - static_volume:/opt/services/djangoapp/static  # <-- bind the static volume
-      - media_volume:/opt/services/djangoapp/media  # <-- bind the media volume
-    networks:
-      - nginx_network
+      - db-data:/var/lib/postgresql/data
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    container_name: ${PROJECT_NAME}_redis
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  api:
+    container_name: ${PROJECT_NAME}_api
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/opt/services/api/src
+      - static_volume:/opt/services/api/static  # <-- bind the static volume
+      - media_volume:/opt/services/api/media  # <-- bind the media volume
+    depends_on:
+      - db
+    command: bash -c "python api/manage.py generateschema > openapi-schema.yml && python api/manage.py collectstatic <<<yes && python api/manage.py makemigrations && python api/manage.py migrate && gunicorn --chdir api --bind :80 api.wsgi:application"
 
   nginx:
-    image: nginx:1.13
+    container_name: ${PROJECT_NAME}_nginx
+    image: nginx:latest
+    env_file:
+      - .env
     ports:
       - 80:80
     volumes:
       - ./config/nginx/conf.d:/etc/nginx/conf.d
-      - static_volume:/opt/services/djangoapp/static  # <-- bind the static volume
-      - media_volume:/opt/services/djangoapp/media  # <-- bind the media volume
+      - static_volume:/opt/services/api/static  # <-- bind the static volume
+      - media_volume:/opt/services/api/media  # <-- bind the media volume
     depends_on:
-      - djangoapp
-    networks:
-      - nginx_network
-
-networks:
-  nginx_network:
-    driver: bridge
+      - api
 
 volumes:
   static_volume:  # <-- declare the static volume
   media_volume:  # <-- declare the media volume
+  db-data:
+  redis-data:

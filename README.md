@@ -1,19 +1,14 @@
-# Boilerplate-Docker-Django-Gunicorn-Nginx
-
-This repo contains a small example for a Django App in a Docker Container. For the deployment the docker container uses Gunicorn and nginx. 
-
-The `Dockerfile` and the `docker-compose`-File are based on the repo from [pawamoy](https://github.com/Pawamoy/docker-nginx-postgres-django-example). The config file includes a setup for an additional database, however this is not included in the `docker-compose`-File. If you would like to checkout the configuration for this setup have a look in the [pawamoy](https://github.com/Pawamoy/docker-nginx-postgres-django-example)-repo.
 
 ### Manual
 
 To build this container run in the folder of the `docker-compose`-file: 
 
-1. `docker-compose build`
-2. `docker-compose run -d` this runs the containers detachted
-3. Open you favourite browser and go to [localhost/index/](localhost/index/)
+1. `docker-compose up --build -d`
+3. Open you favourite browser and go to [0.0.0.0]
 4. To shutdown run `docker-compsose down`
 
-### Static Files
+
+
 
 #### Dockerfile
 
@@ -26,5 +21,24 @@ To include the static files in your templates you can insert in e.g. in your hea
 <link rel="stylesheet" href="{% static 'demo/css/main.css' %} ">
 ```
 
-You can also select another path, just make sure that the static files will be collect when the command `python3 manage.py collectstatic` will be run. In the current setting the static files are set via 
-`STATICFILES_DIRS = [os.path.join(BASE_DIR, 'demo', 'static'),]`.
+
+#### Getting token
+To get the token,
+```
+curl -X POST -H "Content-Type: application/json" -d '{"username":"vuser","password":"vuser"}' http://0.0.0.0:80/api-token-auth/ 
+```
+
+If the user vuser does not exist, create it with
+
+```
+
+```
+
+
+Sample query
+
+```
+curl -H "Authorization:Bearer <Token>" http://0.0.0.0/videos/?format=json
+```
+
+
